@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hi-Tech Player</title>
+  <style>
+    :root{--bg1:#0a0f1e;--bg2:#050711;--cyan:#58e6ff;--violet:#8b5cf6;--text:#e6ecff;}
+    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,system-ui,Arial;background:
+      radial-gradient(900px 600px at 10% 0%, #111a3a 0%, transparent 50%),
+      radial-gradient(900px 700px at 90% 10%, #151c44 0%, transparent 50%),
+      linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--text);min-height:100vh;display:grid;place-items:center;padding:24px}
+    .wrap{width:min(1100px,100%);display:grid;gap:16px;justify-items:center}
+    h1{margin:0 0 8px;text-align:center;text-shadow:0 0 18px rgba(88,230,255,.35)}
+    iframe{width:min(100%,1000px);aspect-ratio:16/9;border:0;border-radius:16px;
+      box-shadow:0 10px 30px #0007,0 0 40px rgba(88,230,255,.18);background:#000}
+    .controls{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+    button{padding:12px 16px;border:0;border-radius:12px;cursor:pointer;font-weight:700;color:white;
+      background:linear-gradient(135deg,var(--cyan),var(--violet));box-shadow:0 0 18px rgba(88,230,255,.2);transition:transform .15s}
+    button:hover{transform:translateY(-1px)}
+    .back{background:linear-gradient(135deg,#f87171,#ef4444)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Your Video</h1>
+    <iframe id="videoFrame" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    <div class="controls">
+      <button onclick="goFullscreen()">Fullscreen</button>
+      <button class="back" onclick="window.location.href='index.html'">Back</button>
+    </div>
+  </div>
+
+  <script>
+    // Extract the ?video=... value and turn it into an embeddable ID
+    const params = new URLSearchParams(location.search);
+    const raw = (params.get('video') || '').trim();
+
+    function extractYouTubeID(input){
+      try{
+        const u = new URL(input);
+        // youtu.be/<id>
+        if(u.hostname.includes('youtu.be')) return u.pathname.slice(1).split('/')[0];
+        // watch?v=<id>
+        if(u.searchParams.get('v')) return u.searchParams.get('v');
+        // shorts/<id>, embed/<id>, live/<id>
+        const parts = u.pathname.split('/').filter(Boolean);
+        const ixShorts = parts.indexOf('shorts'); if(ixShorts>=0 && parts[ixShorts+1]) return parts[ixShorts+1];
+        const ixEmbed = parts.indexOf('embed');   if(ixEmbed>=0 && parts[ixEmbed+1])   return parts[ixEmbed+1];
+        const ixLive  = parts.indexOf('live');    if(ixLive>=0 && parts[ixLive+1])    return parts[ixLive+1];
+      }catch(e){
+        // Not a URL? maybe it's already an ID
+        if(/^[a-zA-Z0-9_-]{6,}$/.test(input)) return input;
+      }
+      return '';
+    }
+
+    const id = extractYouTubeID(raw);
+    const frame = document.getElementById('videoFrame');
+    if(id){
+      frame.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    }else{
+      frame.src = '';
+      alert('Could not read that YouTube link. Going back.');
+      location.href = 'index.html';
+    }
+
+    function goFullscreen(){
+      const el = document.getElementById('videoFrame');
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) el.msRequestFullscreen();
+    }
+  </script>
+</body>
+</html>
